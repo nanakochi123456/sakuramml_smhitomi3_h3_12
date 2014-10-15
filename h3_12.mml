@@ -15,10 +15,11 @@
 // 音源選択
 //_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
 Int GS=0		// Roland機器、Rolandソフトシンセ、Windows付属のソフトシンセ
+Int TIMIDITY=1	// TiMidiTy
 Int XG=0		// YAMAHA機器、YAMAHAソフトシンセ、DS-XG搭載カード
 Int SB=0		// SoundBlaster系（buggy) 標準GM 8Mセット又は Ultimate.sf2
 Int MA3=0		// ４０和音携帯、ミッドラジオプレイヤー
-Int MA7=1		// １２８和音携帯
+Int MA7=0		// １２８和音携帯
 //_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
 
 曲名{"ＳＭ調教師瞳３ Mus12"}
@@ -152,6 +153,40 @@ IF(XG==1) {
 		r4
 	}
 }
+IF(TIMIDITY==1) {
+	// TiMidiTy
+	IF(E_CELLO == 0) {
+		PRINT("TiMidiTy mode")
+		ResetGS();
+
+		E_CELLO		= 100 * 128 + 110;
+		E_PIZZ		= 150 * 128 + 105;
+		E_BASS 		= 150 * 128 + 115;
+		E_TIMP 		= 120 * 128 + 127;
+		E_TRUM 		=  20 * 128 + 127;
+		E_STRS 		=  75 * 128 + 118;
+		E_HARP 		= 150 * 128 + 120;
+		E_VIOL 		=  75 * 128 + 105;
+		E_HORN		= 100 * 128 + 127;
+
+		V_VIO1		= Viola
+		V_PIZZ		= PizzicatoStrings
+		V_BASS		= Contrabass
+
+		V_TRUM		= Trumpet
+		V_STR1		= Strings1
+		V_HARP		= OrchestralHarp
+
+		V_VIO2		= Violin
+		V_STR3		= Strings1
+		V_STR2		= Strings1
+
+		V_HORN		= FrenchHorn
+		V_TIMP		= Timpani
+
+		r4
+	}
+}
 IF(MA3<>0) {
 	// MA-3
 	IF(E_CELLO == 0) {
@@ -221,11 +256,11 @@ Tempo=140
 TimeBase      = 96     // 四分音符分解能
 拍子 4,4
 
-IF(MA7<>0) {
+IF(MA3<>0) {
 	Expression.Frequency(7);
 	Modulation.Frequency(50);
 } ELSE {
-	Expression.Frequency(2);
+	Expression.Frequency(1);
 	Modulation.Frequency(2);
 }
 	
@@ -253,59 +288,91 @@ Function Dy(D,value) {
 }
 
 Function Exp(D,value) {
+	IF(TIMIDITY==0) {
+	    EP(Dy(D,value));
+	}
+}
+
+Function Exp3(D,value) {
     EP(Dy(D,value));
 }
 
 Function Exp2(D,value) {
-    IF(MA3==0) {
-        EP(Dy(D,value));
-    }
+	IF(TIMIDITY==0) {
+	    IF(1 || MA3==0) {
+	        EP(Dy(D,value));
+	    }
+	}
 }
 
 Function Exp_T(D,value1,value2,value3,value4,value5,value6,value7,value8,value9,value10,value11,value12) {
 	Int	NowTime;
+//	Int	D=30*128+100
 
-	NowTime = Time;
-
-	EP.T(Dy(D,value1), Dy(D,value2), value3);
-	IF(value6<>0) {
-		Time=NowTime+value3
-		EP.T(Dy(D,value4), Dy(D,value5), value6)
+	IF(TIMIDITY==0 AND MA7 == 0) {
+		IF(value9<>0) {
+			Expression.onNoteWave(Dy(D,value1),Dy(D,value2),value3,Dy(D,value4),Dy(D,value5),value6,Dy(D,value7),Dy(D,value8),value9);
+		} ELSE {
+			IF(value6<>0) {
+				Expression.onNoteWave(Dy(D,value1),Dy(D,value2),value3,Dy(D,value4),Dy(D,value5),value6);
+			} ELSE {
+				IF(value2<>0) {
+					Expression.onNoteWave(Dy(D,value1),Dy(D,value2),value3);
+				} ELSE {
+					IF(value2==0) {
+						Expression(Dy(D,value1))
+					}
+				}
+			}
+		}
 	}
-	IF(value9<>0) {
-		Time=NowTime+value3+value6
-		EP.T(Dy(D,value7), Dy(D,value8), value9)
-	}
-	IF(value12<>0) {
-		Time=NowTime+value3+value6+value9
-		EP.T(Dy(D,value10), Dy(D,value11), value12)
-	}
-	Time = NowTime;
 }
 
 Function Exp_T2(D,value1,value2,value3,value4,value5,value6,value7,value8,value9,value10,value11,value12) {
 	Int	NowTime;
+//	Int	D=30*128+100
 
-	IF(MA3==0) {
-		NowTime = Time;
-	
-		EP.T(Dy(D,value1), Dy(D,value2), value3);
-		IF(value6<>0) {
-			Time=NowTime+value3;
-			EP.T(Dy(D,value4), Dy(D,value5), value6)
-		}
+	IF(MA7 == 0 AND TIMIDITY == 0) {
 		IF(value9<>0) {
-			Time=NowTime+value3+value6;
-			EP.T(Dy(D,value7), Dy(D,value8), value9)
+			Expression.onNoteWave(Dy(D,value1),Dy(D,value2),value3,Dy(D,value4),Dy(D,value5),value6,Dy(D,value7),Dy(D,value8),value9);
+		} ELSE {
+			IF(value6<>0) {
+				Expression.onNoteWave(Dy(D,value1),Dy(D,value2),value3,Dy(D,value4),Dy(D,value5),value6);
+			} ELSE {
+				IF(value2<>0) {
+					Expression.onNoteWave(Dy(D,value1),Dy(D,value2),value3);
+				} ELSE {
+					IF(value2==0) {
+						Expression(Dy(D,value1))
+					}
+				}
+			}
 		}
-		IF(value12<>0) {
-			Time=NowTime+value3+value6+value9;
-			EP.T(Dy(D,value10), Dy(D,value11), value12)
-		}
-		Time = NowTime;
 	}
 }
 
+Function Exp_T3(D,value1,value2,value3,value4,value5,value6,value7,value8,value9,value10,value11,value12) {
+	Int	NowTime;
+//	Int	D=30*128+100
+
+	IF(MA7 == 0) {
+		IF(value9<>0) {
+			Expression.onNoteWave(Dy(D,value1),Dy(D,value2),value3,Dy(D,value4),Dy(D,value5),value6,Dy(D,value7),Dy(D,value8),value9);
+		} ELSE {
+			IF(value6<>0) {
+				Expression.onNoteWave(Dy(D,value1),Dy(D,value2),value3,Dy(D,value4),Dy(D,value5),value6);
+			} ELSE {
+				IF(value2<>0) {
+					Expression.onNoteWave(Dy(D,value1),Dy(D,value2),value3);
+				} ELSE {
+					IF(value2==0) {
+						Expression(Dy(D,value1))
+					}
+				}
+			}
+		}
+	}
+}
 
 #CELLO={
 	l8
@@ -419,7 +486,7 @@ Function Exp_T2(D,value1,value2,value3,value4,value5,value6,value7,value8,value9
 #TIMPANI1={
 	r4 v127
 	[31 r1]
-	Exp_T(E_TIMP,50,100,!1)
+	Exp_T3(E_TIMP,50,100,!1)
 	[24 a24]
 }
 
@@ -510,16 +577,16 @@ Function Exp_T2(D,value1,value2,value3,value4,value5,value6,value7,value8,value9
 
 #TIMPANI2={
 	>
-	v127 Exp(E_TIMP,127)
-	d1.Exp_T(E_TIMP,60,110,!4)[16 d32] Exp(E_TIMP,127)
+	v127 Exp3(E_TIMP,127)
+	d1.Exp_T3(E_TIMP,60,110,!4)[16 d32] Exp3(E_TIMP,127)
 	c+1 < f+1
-	b1. Exp_T(E_TIMP,60,110,!4)[16 e32 v++] Exp(E_TIMP,127)
+	b1. Exp_T3(E_TIMP,60,110,!4)[16 e32 v++] Exp3(E_TIMP,127)
 	a2e2 a4e4a4>c+4
-	d1.Exp_T(E_TIMP,60,110,!4)[16 d32 v++] Exp(E_TIMP,127)
+	d1.Exp_T3(E_TIMP,60,110,!4)[16 d32 v++] Exp3(E_TIMP,127)
 	c+1 < f+1
 	b1 b3b3b3q10
-	Exp_T(E_TIMP,70,127,!1^1)[24 e24 e24]
-	Exp_T(E_TIMP,127,50,!1^1)[24 e24 e24]
+	Exp_T3(E_TIMP,70,127,!1^1)[24 e24 e24]
+	Exp_T3(E_TIMP,127,50,!1^1)[24 e24 e24]
 }
 #BASS2={
 	>
@@ -697,13 +764,13 @@ EP(127)
 
 #TIMPANI5={
 	[32 r1]
-	Exp_T(E_TIMP,50,127,!1^1)[48 a24 v++]
-	Exp(E_TIMP,127)
+	Exp_T3(E_TIMP,50,127,!1^1)[48 a24 v++]
+	Exp3(E_TIMP,127)
 	[4 >d<a]
 	[4 >e<b]
 	[4 ae ]
-	Exp_T(E_TIMP,80,110,!1^1)[48 a24 v++]
-	Exp(E_TIMP,127)a4
+	Exp_T3(E_TIMP,80,110,!1^1)[48 a24 v++]
+	Exp3(E_TIMP,127)a4
 }
 
 #HORN3={
